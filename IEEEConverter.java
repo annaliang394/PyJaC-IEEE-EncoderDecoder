@@ -1,4 +1,3 @@
-
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -9,6 +8,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import java.util.ArrayList;
 import java.text.DecimalFormat;
@@ -76,6 +76,7 @@ public class IEEEConverter extends Application {
 		mn2helpButton = new Button("Help");
 		mn2helpButton.setPrefSize(100, 40);
 		mn2helpButton.setFont(font);
+	
 
 		// create and format the labels
 		title = new Label("IEEE-754 Floating Point Conversion Tool");
@@ -97,10 +98,11 @@ public class IEEEConverter extends Application {
 
 		Scene mainScene = new Scene(pane, 500, 300);
 
+
 		// -----Help Scene-----
-		VBox pane2 = new VBox(5);
+		VBox pane2 = new VBox(10);
 		pane2.setAlignment(Pos.TOP_CENTER);
-		Scene helpscene = new Scene(pane2, 600, 300);
+		Scene helpscene = new Scene(pane2, 800, 600);
 
 		// create and format the buttons for the help scene
 		help2mnButton = new Button("Return to Converter");
@@ -113,14 +115,40 @@ public class IEEEConverter extends Application {
 		// create and format labels for help scene
 		helptitle = new Label("Using the Converter");
 		helptitle.setFont(font_title);
-		use = new Label("How to Use: ");
+		use = new Label("                     How to Use:\n"
+				      + "Enter the number (a decimal real number or 32-bit\n"
+				      + "binary value) into the text field. Then, click the\n"
+				      + "corresponding button to convert your value.\n"
+				      + "Note: When converting from binary to decimal, there\n"
+				      + "may be a slight rounding error from the conversion\n"
+				      + "since not every decimal number has a finite representation\n"
+				      + "in binary."
+				      + "\n");
 		use.setFont(font);
-		spcl = new Label("Special Values: ");
+		use.setTextAlignment(TextAlignment.LEFT);
+		spcl = new Label("                 Special Values:\n "
+				      + "Enter 'INFINITY', '-INFINITY', or 'NAN' to get their\n"
+				      + "special IEEE-754 32-bit binary values. This converter\n"
+				      + "also recognizes the difference between 0.0 and -0.0"
+				      + "\n");
 		spcl.setFont(font);
-		instrct = new Label("How it works: ");
+		spcl.setTextAlignment(TextAlignment.LEFT);
+		instrct = new Label("                      How it works:\n"
+					  + "When converting from a decimal to an IEEE-754\n"
+					  + "encoded binary, the bits represent (from left to right)\n"
+					  + "   *1 bit for the sign (1 if the decimal is negative,\n "
+					  + "    0 if positive)\n"
+					  + "   *8 bits for the exponent\n"
+					  + "   *23 bits for the mantissa/significand\n"
+					  + "The exponent and mantissa are binary representations of the\n"
+					  + "decimal value in base-2 scientific notation. For more \n"
+					  + "information, visit: https://urlzs.com/DZD97"
+					  + "\n");
 		instrct.setFont(font);
+		instrct.setTextAlignment(TextAlignment.LEFT);
 		contact = new Label("Feel free to contact us at IEEEConverter@gmail.com.");
 		contact.setFont(font);
+		contact.setTextAlignment(TextAlignment.LEFT);
 		
 		// add elements to the help scene layout
 		pane2.getChildren().add(helptitle);
@@ -369,7 +397,7 @@ class DecToIEEE implements EventHandler<ActionEvent> {
 }
 
 /**
- * An EventHandler class that knows how to convert user-input from an 
+ * An EventHandler class that converts user-input from an 
  * IEEE-754 32-bit binary value to a decimal float.
  */
 class IEEEToDec implements EventHandler<ActionEvent> {
@@ -384,10 +412,10 @@ class IEEEToDec implements EventHandler<ActionEvent> {
 	 * Sets the sign, exponent and mantissa of the IEEE 754 floating point number.
 	 * 
 	 * @param tf    A text field containing the IEEE 754 floating point number.
-	 * @param label A label that will display the decimal representation of the
-	 *              number or an error message
+	 * @param label A label that will display the decimal representation of the number. 
 	 */
 	public IEEEToDec(TextField tf, Label label) {
+		//Initialize the attributes belonging to the IEEEToDec class
 		this.label = label;
 		this.tf = tf;
 		this.inputstr = tf.getText();
@@ -395,19 +423,33 @@ class IEEEToDec implements EventHandler<ActionEvent> {
 	}
 	
 	/**
-	 * Sets the sign, exponent and mantissa of the IEEE 754 floating point number.
+	 * Sets the label to the error message if the user input is invalid.
+	 * 
+	 */
+	public void error() {
+		//Set the label to display the error message
+		this.label.setText("Invalid entry. Please enter a 32-bit binary value.");
+	}
+	
+	/**
+	 * Determines whether the IEEE 754 input is a special value. If it is, updates
+	 * the label to what special value the input is and returns true. Otherwise, 
+	 * returns false.
 	 * 
 	 * @param tf    A text field containing the IEEE 754 floating point number to convert.
 	 * @param label A label that will display the decimal representation of the
-	 *              number or an error message
+	 * @return true if the input is a special value, false otherwise.            
 	 */
 	public boolean check_spcl(String input) {
+		//The decimal representation is equal to infinity
 		if (input.equals("01111111100000000000000000000000")) {
 			this.label.setText("Decimal Representation: INFINITY");
 			return true;
+		//The decimal representation is equal to -infinity
 		} else if (input.equals("11111111100000000000000000000000")) {
 			this.label.setText("Decimal Representation: -INFINITY");
 			return true;
+		//The decimal representation is equal to NAN
 		} else if (input.equals("01111111111111111111111111111111")) {
 			this.label.setText("Decimal Representation: NAN");
 			return true;
@@ -424,12 +466,14 @@ class IEEEToDec implements EventHandler<ActionEvent> {
 	 * @param input The first character of the IEEE 754 floating point number.
 	 */
 	public void getsign(char input) {
+		//Assign sign as 0 if the first character is 0
 		if (input == '0') {
 			this.sign = 0;
+		//Assign sign as 1 if the first character is 1
 		} else if (input == '1') {
 			this.sign = 1;
 		} else {
-			this.label.setText("Invalid entry. Please enter a 32-bit binary value.");
+			error();
 			return;
 		}
 	}
@@ -443,13 +487,15 @@ class IEEEToDec implements EventHandler<ActionEvent> {
 	 */
 	public void getexponent(String input) {
 		try {
+			//Convert from binary to decimal
 			int decimal = Integer.parseInt(input, 2);
+			//Subtract the bias to determine the exponent
 			this.exponent = decimal - 127;
 
 		}
 
 		catch (Exception e) {
-			this.label.setText("Invalid entry. Please enter a 32-bit binary value.");
+			error();
 			return;
 		}
 
@@ -465,11 +511,12 @@ class IEEEToDec implements EventHandler<ActionEvent> {
 	public void getmantissa(String input) {
 		double decimal = 0;
 		int num = 0;
+		//Converts the mantissa to a decimal value
 		for (int i = -1; i > -24; i--) {
 			char chr = input.charAt(num);
 			int value = Integer.parseInt(String.valueOf(chr));
 			if (value > 1) {
-				this.label.setText("Invalid entry. Please enter a 32-bit binary value.");
+				error();
 				break;
 			}
 			decimal += (value * Math.pow(2, i));
@@ -487,12 +534,14 @@ class IEEEToDec implements EventHandler<ActionEvent> {
 	public void handle(ActionEvent event) {
 		this.inputstr = this.tf.getText();
 		if (!(this.inputstr.length() == 32)) {
-			this.label.setText("Invalid entry. Please enter a 32-bit binary value.");
+			error();
 			return;
 		}
+		//If the user input is a special value
 		if (check_spcl(this.inputstr)) {
 			return;
 		}
+		//If the user input is not a special value
 		getsign(this.inputstr.charAt(0));
 		getexponent(this.inputstr.substring(1, 9));
 		getmantissa(this.inputstr.substring(9));
